@@ -75,7 +75,7 @@ def create_request(request, role, ip, worker_num=None):
             for i in range(1, params.numNIC+1):
                 iface.append(req.addInterface('eth{}'.format(i), pg.IPv4Address('10.10.{}.1'.format(i), '255.255.255.0')))
             #iface.append(req.addInterface('eth2', pg.IPv4Address('10.10.2.'+ip.split('.')[-1], '255.255.255.0')))
-        else if params.numNIC==1:
+        elif params.numNIC==1:
             iface = req.addInterface(
               'eth1', pg.IPv4Address(ip, '255.255.255.0'))
     return iface
