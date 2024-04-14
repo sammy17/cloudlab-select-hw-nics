@@ -88,16 +88,20 @@ if params.slaveCount>0:
     # Link link-0
     link_0 = request.LAN('link-0')
     link_0.Site('undefined')
-    if params.secondNIC:
-        link_1 = request.LAN('link-1')
-        link_1.Site('undefined')
+    if params.numNIC>1:
+        links = []
+        for i in range(params.numNIC):
+            link_1 = request.LAN('link-1')
+            link_1.Site('undefined')
+            links.append(link_1)
 
 # Master Node
 iface = create_request(request, 'm', '10.10.1.1')
 if params.slaveCount>0:
-    if params.secondNIC:
+    if params.numNIC:
         link_0.addInterface(iface[0])
-        link_1.addInterface(iface[1])
+        for i in range(params.numNIC):
+            links[i].addInterface(iface[i+1])
     else:
         link_0.addInterface(iface)
 
@@ -105,9 +109,11 @@ if params.slaveCount>0:
 for i in range(params.slaveCount):
     iface = create_request(
         request, 's', '10.10.1.{}'.format(i + 2), worker_num=i)
-    if params.secondNIC:
+    if params.numNIC>1:
         link_0.addInterface(iface[0])
-        link_1.addInterface(iface[1])
+        #link_1.addInterface(iface[1])
+        for i in range(params.numNIC):
+            links[i].addInterface(iface[i+1])
     else:
         link_0.addInterface(iface)
 
