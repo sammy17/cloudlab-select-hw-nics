@@ -97,7 +97,7 @@ if params.slaveCount>0:
 # Master Node
 iface = create_request(request, 'm', '10.10.1.1')
 if params.slaveCount>0:
-    if params.numNIC:
+    if params.numNIC>1:
         link_0.addInterface(iface[0])
         for i in range(params.numNIC):
             links[i].addInterface(iface[i+1])
