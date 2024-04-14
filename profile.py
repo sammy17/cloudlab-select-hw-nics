@@ -43,8 +43,12 @@ pc.defineParameter("osImage", "Select Image",
                    longDescription="Supported operating systems are Ubuntu and CentOS.") 
 pc.defineParameter("publicIPSlaves", "Request public IP addresses for the slaves or not",
                    portal.ParameterType.BOOLEAN, True)
-pc.defineParameter("numNIC", "Number of NICs that need to setup",
-                   portal.ParameterType.INTEGER, False)
+pc.defineParameter("secondNIC", "Have two experimental NICs that need to setup",
+                   portal.ParameterType.BOOLEAN, False)
+pc.defineParameter("thirdNIC", "Setup the third NIC",
+                   portal.ParameterType.BOOLEAN, False)
+pc.defineParameter("fourthNIC", "Setup the fourth NIC",
+                   portal.ParameterType.BOOLEAN, False)
 
 params = pc.bindParameters()
 
@@ -70,12 +74,15 @@ def create_request(request, role, ip, worker_num=None):
             role)))
     iface = []
     if params.slaveCount>0:
-        if params.numNIC>1:
+        if params.secondNIC:
             # iface = []
-            for i in range(1, params.numNIC+1):
-                iface.append(req.addInterface('eth{}'.format(i), pg.IPv4Address('10.10.{}.1'.format(i), '255.255.255.0')))
-            #iface.append(req.addInterface('eth2', pg.IPv4Address('10.10.2.'+ip.split('.')[-1], '255.255.255.0')))
-        elif params.numNIC==1:
+            iface.append(req.addInterface('eth1', pg.IPv4Address(ip, '255.255.255.0')))
+            iface.append(req.addInterface('eth2', pg.IPv4Address('10.10.2.'+ip.split('.')[-1], '255.255.255.0')))
+            if params.thirdNIC:
+                iface.append(req.addInterface('eth3', pg.IPv4Address('10.10.3.'+ip.split('.')[-1], '255.255.255.0')))
+            if params.fourthNIC:
+                iface.append(req.addInterface('eth4', pg.IPv4Address('10.10.4.'+ip.split('.')[-1], '255.255.255.0')))
+        else:
             iface = req.addInterface(
               'eth1', pg.IPv4Address(ip, '255.255.255.0'))
     return iface
@@ -83,24 +90,31 @@ def create_request(request, role, ip, worker_num=None):
 
 # Create a Request object to start building the RSpec.
 request = pc.makeRequestRSpec()
-links = []
+
 if params.slaveCount>0:
     # Link link-0
     link_0 = request.LAN('link-0')
     link_0.Site('undefined')
-    if params.numNIC>1:
-        for i in range(params.numNIC):
-            link_1 = request.LAN('link-{}'.format(i+1))
-            link_1.Site('undefined')
-            links.append(link_1)
+    if params.secondNIC:
+        link_1 = request.LAN('link-1')
+        link_1.Site('undefined')
+    if params.thirdNIC:
+        link_2 = request.LAN('link-2')
+        link_2.Site('undefined')
+    if params.fourthNIC:
+        link_3 = request.LAN('link-3')
+        link_3.Site('undefined')
 
 # Master Node
 iface = create_request(request, 'm', '10.10.1.1')
 if params.slaveCount>0:
-    if params.numNIC>1:
+    if params.secondNIC:
         link_0.addInterface(iface[0])
-        for i in range(params.numNIC):
-            links[i].addInterface(iface[i+1])
+        link_1.addInterface(iface[1])
+        if params.thirdNIC:
+            link_2.addInterface(iface[2])
+        if params.fourthNIC:
+            link_3.addInterface(iface[3])
     else:
         link_0.addInterface(iface)
 
@@ -108,23 +122,16 @@ if params.slaveCount>0:
 for i in range(params.slaveCount):
     iface = create_request(
         request, 's', '10.10.1.{}'.format(i + 2), worker_num=i)
-    if params.numNIC>1:
+    if params.secondNIC:
         link_0.addInterface(iface[0])
-        #link_1.addInterface(iface[1])
-        for i in range(params.numNIC):
-            links[i].addInterface(iface[i+1])
+        link_1.addInterface(iface[1])
+        if params.thirdNIC:
+            link_2.addInterface(iface[2])
+        if params.fourthNIC:
+            link_3.addInterface(iface[3])
     else:
         link_0.addInterface(iface)
 
-# Only support upto 4 NICs
-if params.numNIC==2:
-    link_1 = links[0]
-elif params.numNIC==3:
-    link_1 = links[0]
-    link_2 = links[1]
-elif params.numNIC==4:
-    link_1 = links[0]
-    link_2 = links[1]
-    link_3 = links[2]
+
 # Print the generated rspec
 pc.printRequestRSpec(request)
