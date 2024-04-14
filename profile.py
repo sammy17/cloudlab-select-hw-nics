@@ -83,15 +83,14 @@ def create_request(request, role, ip, worker_num=None):
 
 # Create a Request object to start building the RSpec.
 request = pc.makeRequestRSpec()
-
+links = []
 if params.slaveCount>0:
     # Link link-0
     link_0 = request.LAN('link-0')
     link_0.Site('undefined')
     if params.numNIC>1:
-        links = []
         for i in range(params.numNIC):
-            link_1 = request.LAN('link-1')
+            link_1 = request.LAN('link-{}'.format(i+1))
             link_1.Site('undefined')
             links.append(link_1)
 
