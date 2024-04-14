@@ -116,6 +116,15 @@ for i in range(params.slaveCount):
     else:
         link_0.addInterface(iface)
 
-
+# Only support upto 4 NICs
+if params.numNIC==2:
+    link_1 = links[0]
+elif params.numNIC==3:
+    link_1 = links[0]
+    link_2 = links[1]
+elif params.numNIC==4:
+    link_1 = links[0]
+    link_2 = links[1]
+    link_3 = links[2]
 # Print the generated rspec
 pc.printRequestRSpec(request)
